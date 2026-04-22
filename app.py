@@ -47,6 +47,34 @@ def format_percentage(val):
     except:
         return val
 
+def clean_scheme_name(name):
+    if not isinstance(name, str):
+        return name
+    
+    # Remove common suffixes
+    # Order matters: longer ones first
+    suffixes = ["Reg Gr", "Gr Gr", "Dir Gr", "Reg IDCW", "Dir IDCW", "Reg", "Gr", "Growth", "Direct"]
+    
+    for _ in range(3): # Try removing up to 3 suffixes
+        found = False
+        for suffix in suffixes:
+            if name.endswith(" " + suffix) or name.endswith("-" + suffix):
+                name = name[:-len(suffix)-1].strip()
+                found = True
+                break
+            elif name.endswith(suffix):
+                name = name[:-len(suffix)].strip()
+                found = True
+                break
+        if not found:
+            break
+            
+    # If it doesn't end with "Fund", append " Fund"
+    if not name.lower().endswith(" fund"):
+        name += " Fund"
+        
+    return name
+
 st.title("📊 Mutual Fund Shorts Data Tool")
 
 # Sidebar for file upload and navigation
@@ -102,6 +130,10 @@ with st.sidebar:
 if df is not None:
     # Clean up column names (remove extra spaces)
     df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
+    
+    # Clean up scheme names
+    if 'Scheme Name' in df.columns:
+        df['Scheme Name'] = df['Scheme Name'].apply(clean_scheme_name)
     
     if view_mode == "Single Fund View":
         st.header("🎯 Single Fund Analysis")
