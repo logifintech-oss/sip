@@ -75,44 +75,6 @@ def clean_scheme_name(name):
         
     return name
 
-def display_table_with_copy(df, table_id):
-    """Display a DataFrame as an HTML table with custom copy button to avoid shortcut conflicts"""
-    # Convert DataFrame to HTML table
-    html_table = df.to_html(index=False, border=1, classes='dataframe')
-    
-    # Create copy button with JavaScript that copies the table
-    copy_button_js = f'''
-        <div style="margin-bottom: 10px;">
-            <button onclick="copyTable_{table_id}()" 
-                    style="background-color: #0066cc; color: white; padding: 8px 16px; border: none; 
-                           border-radius: 4px; cursor: pointer; font-weight: bold;">
-                📋 Copy to Clipboard
-            </button>
-        </div>
-        <div id="table_{table_id}" style="overflow-x: auto;">
-            {html_table}
-        </div>
-        <script>
-            function copyTable_{table_id}() {{
-                var table = document.getElementById('table_{table_id}');
-                var range = document.createRange();
-                range.selectNode(table);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                try {{
-                    var successful = document.execCommand('copy');
-                    if(successful) {{
-                        alert('✅ Data copied to clipboard successfully!');
-                    }}
-                }} catch (err) {{
-                    alert('❌ Failed to copy data');
-                }}
-                window.getSelection().removeAllRanges();
-            }}
-        </script>
-    '''
-    st.markdown(copy_button_js, unsafe_allow_html=True)
-
 st.title("📊 Mutual Fund Shorts Data Tool")
 
 # Sidebar for file upload and navigation
@@ -248,10 +210,7 @@ if df is not None:
                 elif col == "XIRR %" or col in fund_metrics:
                     formatted_df[col] = formatted_df[col].apply(format_percentage)
                 
-            # Use our custom HTML table with copy button that won't conflict
-            import hashlib
-            table_hash = hashlib.md5(f"{fund_name}_{sip_amount}".encode()).hexdigest()[:8]
-            display_table_with_copy(formatted_df, f"sip_single_{table_hash}")
+            st.dataframe(formatted_df, use_container_width=True)
 
         # Footer info like the image
         today_str = datetime.now().strftime("%d %b %Y")
@@ -317,8 +276,7 @@ if df is not None:
             elif "invested amount" in col or "Current value" in col:
                 top_funds[col] = top_funds[col].apply(format_currency)
 
-        # Use our custom HTML table with copy button that won't conflict
-        display_table_with_copy(top_funds[final_cols], "sip_top_funds")
+        st.dataframe(top_funds[final_cols], use_container_width=True)
 
 else:
     st.info("Please upload an Excel file or ensure 'SIP Returns (6).xls' exists in the directory.")
