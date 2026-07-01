@@ -81,10 +81,6 @@ st.title("📊 Mutual Fund Shorts Data Tool")
 with st.sidebar:
     st.header("Settings")
     uploaded_file = st.file_uploader("Upload Mutual Fund Excel File", type=["xls", "xlsx"])
-    if st.button("Clear Cache"):
-        st.cache_data.clear()
-        st.cache_resource.clear()
-        st.success("Cache cleared!")
     
     persistent_file = "last_updated_sip_data.xls"
     
@@ -214,7 +210,16 @@ if df is not None:
                 elif col == "XIRR %" or col in fund_metrics:
                     formatted_df[col] = formatted_df[col].apply(format_percentage)
                 
-            st.data_editor(formatted_df, use_container_width=True, disabled=True)
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                st.download_button(
+                    label="📋 Copy to Clipboard",
+                    data=formatted_df.to_csv(sep='\t', index=False),
+                    file_name='sip_data.txt',
+                    mime='text/csv',
+                    key=f'sip_copy_{fund_name}_{dur}'
+                )
+            st.dataframe(formatted_df, use_container_width=True, hide_index=True)
 
         # Footer info like the image
         today_str = datetime.now().strftime("%d %b %Y")
@@ -280,7 +285,16 @@ if df is not None:
             elif "invested amount" in col or "Current value" in col:
                 top_funds[col] = top_funds[col].apply(format_currency)
 
-        st.data_editor(top_funds[final_cols], use_container_width=True, disabled=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.download_button(
+                label="📋 Copy to Clipboard",
+                data=top_funds[final_cols].to_csv(sep='\t', index=False),
+                file_name='top_funds.txt',
+                mime='text/csv',
+                key='top_funds_copy'
+            )
+        st.dataframe(top_funds[final_cols], use_container_width=True, hide_index=True)
 
 else:
     st.info("Please upload an Excel file or ensure 'SIP Returns (6).xls' exists in the directory.")
